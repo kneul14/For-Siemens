@@ -7,21 +7,18 @@
 #include <map>
 #include <string>
 
+#include <vector>
+
 using namespace std;
+
+void setupAirports(map<string, time_t>& timeLastLanding, const vector<string>& airports);
 
 int main()
 {
-    const char* airports[] = {"LGW", "EMA", "MAN"};
+    vector<string> airports = { "LGW", "EMA", "MAN" };
     map<string, time_t> timeLastLanding;
     int timeBeforeLanding = 60;
-    time_t timeCurrent;
-    time(&timeCurrent);
-    string airport;
-    bool exists = 1;
-
-    for (auto& a : airports) {
-        timeLastLanding[a] = 0;
-    }
+    setupAirports(timeLastLanding, airports);
 
     /*
      * I assume this system would be waiting for btye arrays in a realistic scenario but because
@@ -32,17 +29,43 @@ int main()
     while (1) {
         string airport;
 
-        // Prompt user for input
-        cout << "Enter the airport id for wheree the plane will land. (LGW, EMA, MAN) ";
+        // User input
+        cout << "Enter the airport id for where the plane will land. (LGW, EMA, MAN) " << endl;
         cin >> airport;
 
-        // Validate input
+        // validate input
         if (timeLastLanding.find(airport) == timeLastLanding.end()) {
-            cout << "Invalid airport ID. Please try again.\n";
+            cout << "Invalid airport ID. try again." << endl;
             continue;
+        }
+
+        // current time
+        time_t timeCurrent;
+        time(&timeCurrent);
+
+        // time between the last landing and now
+        double timeSinceLastLanding = difftime(timeCurrent, timeLastLanding[airport]);
+
+        // Check if enough time has passed? 
+        if (timeSinceLastLanding >= timeBeforeLanding) 
+        {
+            cout << "Plane successfully landed at " << airport << "!\n";
+            cout << "\n";
+            timeLastLanding[airport] = timeCurrent; // Updatng landing time
+        }
+        else 
+        {
+            int timeRemaining = timeBeforeLanding - static_cast<int>(timeSinceLastLanding);
+            cout << "This plane cannot land at " << airport << ". Please wait for " << timeRemaining << " seconds.\n";
+            cout << "\n";
         }
     }
 
     return 0;
 }
 
+void setupAirports(map<string, time_t>& timeLastLanding, const vector<string>& airports) {
+    for (const auto& a : airports) {
+        timeLastLanding[a] = 0;
+    }
+}
